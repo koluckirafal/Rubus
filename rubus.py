@@ -25,22 +25,22 @@ import urllib.request
 from subprocess import Popen, PIPE, STDOUT
 
 
-shortID = 'mcpi'
-longID = 'minecraft-pi'
+ShortID = 'mcpi'
+LongID = 'minecraft-pi'
 
-gameVersion = '0.1.1'
-#gameVersion = '0.1'   #if you want to download leaked version
+GameVersion = '0.1.1'
+# GameVersion = '0.1'   #if you want to download leaked version
 
-#gameVersion >= 0.1.1
-remotePool = 'https://s3.amazonaws.com/assets.minecraft.net/pi/'
-#gameVersion == 0.1.0
-#remotePool = 'http://technowiz2cubed.weebly.com/uploads/1/6/8/9/16891832/'
+# for GameVersion >= 0.1.1
+RemotePool = 'https://s3.amazonaws.com/assets.minecraft.net/pi/'
+# for GameVersion == 0.1.0
+# RemotePool = 'http://technowiz2cubed.weebly.com/uploads/1/6/8/9/16891832/'
 
-envPool = os.path.join(os.path.expanduser('~'), '.' + shortID)
-localPool = os.path.join(envPool, 'packages')
-gamePool = os.path.join(envPool, 'versions')
+EnvPool = os.path.join(os.path.expanduser('~'), '.' + ShortID)
+LocalPool = os.path.join(EnvPool, 'packages')
+GamePool = os.path.join(EnvPool, 'versions')
 
-intro = '''\n    Rubus Launcher for Minecraft: Pi Edition,
+Intro = '''\n    Rubus Launcher for Minecraft: Pi Edition,
     copyright (C) Rafał 'BluRaf' Kołucki, 2014\n\
     This program comes with ABSOLUTELY NO WARRANTY;
     for details press 'License' button in 'About' card.\n\
@@ -50,97 +50,97 @@ intro = '''\n    Rubus Launcher for Minecraft: Pi Edition,
 
 
 while True:
-    if os.path.isdir(envPool) == 1:
+    if os.path.isdir(EnvPool) == 1:
         print('Switching to launcher environment directory...')
-        os.chdir(envPool)
+        os.chdir(EnvPool)
         break
     else:
         print('Making launcher environment directory...')
-        os.mkdir(envPool)
+        os.mkdir(EnvPool)
 
 
-def checkLocalPool(localPool):
+def checkLocalPool(LocalPool):
     while True:
-        if os.path.isdir(localPool) == 1:
+        if os.path.isdir(LocalPool) == 1:
             print('- local repository exists')
             break
         else:
             print('- making local repository directory...')
-            os.mkdir(localPool)
+            os.mkdir(LocalPool)
 
 
-def checkGamePool(gamePool):
+def checkGamePool(GamePool):
     while True:
-        if os.path.isdir(gamePool) == 1:
+        if os.path.isdir(GamePool) == 1:
             print('- unpacked game directory exists')
             break
         else:
             print('- unpacked game directory doesn\'t exist')
-            os.mkdir(gamePool)
+            os.mkdir(GamePool)
 
 
-def download(longID, gameVersion, remotePool, localPool):
-    remotePackage = urllib.request.urlopen('%s%s-%s.tar.gz'
-                                           % (remotePool, longID, gameVersion))
-    localPackage = open(os.path.join(localPool, '%s-%s.tar.gz'
-                                     % (longID, gameVersion)), 'wb')
-    localPackage.write(remotePackage.read())
-    localPackage.close()
+def download(LongID, GameVersion, RemotePool, LocalPool):
+    RemotePackage = urllib.request.urlopen('%s%s-%s.tar.gz'
+                                           % (RemotePool, LongID, GameVersion))
+    LocalPackage = open(os.path.join(LocalPool, '%s-%s.tar.gz'
+                                     % (LongID, GameVersion)), 'wb')
+    LocalPackage.write(RemotePackage.read())
+    LocalPackage.close()
 
 
-def unpack(longID, gameVersion, localPool, gamePool):
-    localPackage = tarfile.open(os.path.join(localPool, \
-                                           '%s-%s.tar.gz' \
-                                           % (longID, gameVersion)), "r:gz")
-    localPackage.extractall(gamePool)
-    localPackage.close()
+def unpack(LongID, GameVersion, LocalPool, GamePool):
+    LocalPackage = tarfile.open(os.path.join(LocalPool,
+                                             '%s-%s.tar.gz'
+                                             % (LongID, GameVersion)), "r:gz")
+    LocalPackage.extractall(GamePool)
+    LocalPackage.close()
 
 
-def prepareGameInstance(shortID, longID, gameVersion, \
-                        gamePool, remotePool, localPool):
-    if os.path.isdir(os.path.join(gamePool, gameVersion)) == 1:
+def prepareGameInstance(ShortID, LongID, GameVersion,
+                        GamePool, RemotePool, LocalPool):
+    if os.path.isdir(os.path.join(GamePool, GameVersion)) == 1:
         print('Switching to unpacked game directory, ...')
-        os.chdir(os.path.join(gamePool, gameVersion))
+        os.chdir(os.path.join(GamePool, GameVersion))
     else:
         print('Unpacked game directory not detected, ...')
         try:
             print('trying to unpack game package...')
-            unpack(longID, gameVersion, localPool, gamePool)
+            unpack(LongID, GameVersion, LocalPool, GamePool)
         except:
             print('... game package not found in local repository!')
             print('Downloading game package...')
-            download(longID, gameVersion, remotePool, localPool)
+            download(LongID, GameVersion, RemotePool, LocalPool)
             print('unpacking game package...')
-            unpack(longID, gameVersion, localPool, gamePool)
+            unpack(LongID, GameVersion, LocalPool, GamePool)
             print('Game package unpacked!')
         print('Renaming version directory...')
-        os.rename(os.path.join(gamePool, shortID), \
-                  os.path.join(gamePool, gameVersion))
-        prepareGameInstance(shortID, longID, gameVersion, \
-                            gamePool, remotePool, localPool)
+        os.rename(os.path.join(GamePool, ShortID),
+                  os.path.join(GamePool, GameVersion))
+        prepareGameInstance(ShortID, LongID, GameVersion,
+                            GamePool, RemotePool, LocalPool)
 
 
-def runBinary(binaryPath, binaryName):
-    Popen(['file', os.path.join(binaryPath, binaryName)])
-    Popen(os.path.join(binaryPath, binaryName))
+def runBinary(BinaryPath, BinaryName):
+    Popen(['file', os.path.join(BinaryPath, BinaryName)])
+    Popen(os.path.join(BinaryPath, BinaryName))
 
 
 def main():
-    print(intro)
+    print(Intro)
     print('Checking for local repository:')
-    checkLocalPool(localPool)
+    checkLocalPool(LocalPool)
     print('Checking for game directories:')
-    checkGamePool(gamePool)
+    checkGamePool(GamePool)
 
-    #prepare
-    prepareGameInstance(shortID, longID, gameVersion, \
-                        gamePool, remotePool, localPool)
+    # prepare
+    prepareGameInstance(ShortID, LongID, GameVersion,
+                        GamePool, RemotePool, LocalPool)
 
-    #here launch the game
-    runBinary(os.path.join(gamePool, gameVersion), longID)
+    # here launch the game
+    runBinary(os.path.join(GamePool, GameVersion), LongID)
 
-    #Label(root, text=(longID + ' (' + shortID + ') ' + gameVersion)).pack()
-    #root.mainloop()
+    # Label(root, text=(LongID + ' (' + ShortID + ') ' + GameVersion)).pack()
+    # root.mainloop()
 
 
 if __name__ == "__main__":
