@@ -49,6 +49,11 @@ Intro = '''\n    Rubus Launcher for Minecraft: Pi Edition,
     press 'License' button in 'About' card for details.\n'''
 
 
+if os.uname()[0] == 'Linux' and os.uname()[4] == 'armv6l':
+    print('''Running under GNU/Linux on ARMv6l core''')
+else:
+    print('''Not running on Raspberry Pi, Minecraft: Pi Edition won't work''')
+
 while True:
     if os.path.isdir(EnvPool) == 1:
         print('Switching to launcher environment directory...')
