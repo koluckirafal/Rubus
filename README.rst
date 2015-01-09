@@ -15,7 +15,7 @@ Use this oneliner for install latest version from git:
 
 * :code:`curl http://bluraf.eu/0install/rubus | bash`
 
-Download manually:
+... or download manually:
 
 * Download :code:`Rubus.py` somewhere (in ~ or /opt/)
 * :code:`chmod +x ./rubus.py`
@@ -25,7 +25,7 @@ License
 -------
 Rubus Launcher for Minecraft Pi edition
 
-Copyright (C) 2014, Rafał 'BluRaf' Kołucki
+Copyright (C) 2014-2015, Rafał 'BluRaf' Kołucki
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

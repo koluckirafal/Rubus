@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 """
-Rubus Launcher for Minecraft Pi edition
-Copyright (C) 2014, Rafał 'BluRaf' Kołucki
+Rubus Launcher
+Copyright (C) 2014-2015, Rafał 'BluRaf' Kołucki
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@ ShortID = 'mcpi'
 LongID = 'minecraft-pi'
 
 GameVersion = '0.1.1'
+LauncherVersion = '0.1.0'
 
 RemotePool = 'https://s3.amazonaws.com/assets.minecraft.net/pi/'
 RemoteFeed = 'http://pi.minecraft.net/?feed=rss2'
@@ -38,13 +39,15 @@ LocalPool = os.path.join(EnvPool, 'packages')
 GamePool = os.path.join(EnvPool, 'versions')
 
 
-Intro = '''\n    Rubus Launcher for Minecraft: Pi Edition,
-    copyright (C) Rafał 'BluRaf' Kołucki, 2014\n\
+Intro = '''\n    Rubus Launcher, copyright (C) Rafał 'BluRaf' Kołucki, 2014\n\
     This program comes with ABSOLUTELY NO WARRANTY;
     for details press 'License' button in 'About' card.\n\
     This is free software, and you are welcome to redistribute it\n\
     under certain conditions;
     press 'License' button in 'About' card for details.\n'''
+
+print('Rubus Launcher ' + LauncherVersion)
+print('''Minecraft: Pi Edition launcher for Raspberry Pi''')
 
 
 if os.uname()[4] == 'armv6l' and os.path.isfile('/dev/vcihq'):
@@ -129,7 +132,6 @@ def prepareGameInstance(ShortID, LongID, GameVersion,
 
 
 def runBinary(BinaryPath, BinaryName):
-    Popen(['file', os.path.join(BinaryPath, BinaryName)])
     Popen(os.path.join(BinaryPath, BinaryName))
 
 
