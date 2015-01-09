@@ -11,9 +11,9 @@ Requirements
 
 How to run launcher?
 --------------------
-* Unpack Rubus package somewhere
-* `chmod +x ./rubus.py`
-* `./rubus.py`
+* Download :code:`Rubus.py` somewhere (in ~ or /opt/)
+* :code:`chmod +x ./rubus.py`
+* :code:`./rubus.py` or :code:`python3 ./rubus.py`
 
 License
 -------
