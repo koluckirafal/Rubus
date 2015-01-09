@@ -11,6 +11,12 @@ Requirements
 
 How to run launcher?
 --------------------
+Use this oneliner for install latest version from git:
+
+* :code:`curl http://bluraf.eu/0install/rubus | bash`
+
+Download manually:
+
 * Download :code:`Rubus.py` somewhere (in ~ or /opt/)
 * :code:`chmod +x ./rubus.py`
 * :code:`./rubus.py` or :code:`python3 ./rubus.py`
