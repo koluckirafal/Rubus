@@ -29,16 +29,14 @@ ShortID = 'mcpi'
 LongID = 'minecraft-pi'
 
 GameVersion = '0.1.1'
-# GameVersion = '0.1'   #if you want to download leaked version
 
-# for GameVersion >= 0.1.1
 RemotePool = 'https://s3.amazonaws.com/assets.minecraft.net/pi/'
-# for GameVersion == 0.1.0
-# RemotePool = 'http://technowiz2cubed.weebly.com/uploads/1/6/8/9/16891832/'
+RemoteFeed = 'http://pi.minecraft.net/?feed=rss2'
 
 EnvPool = os.path.join(os.path.expanduser('~'), '.' + ShortID)
 LocalPool = os.path.join(EnvPool, 'packages')
 GamePool = os.path.join(EnvPool, 'versions')
+
 
 Intro = '''\n    Rubus Launcher for Minecraft: Pi Edition,
     copyright (C) Rafał 'BluRaf' Kołucki, 2014\n\
@@ -49,10 +47,15 @@ Intro = '''\n    Rubus Launcher for Minecraft: Pi Edition,
     press 'License' button in 'About' card for details.\n'''
 
 
-if os.uname()[0] == 'Linux' and os.uname()[4] == 'armv6l':
-    print('''Running under GNU/Linux on ARMv6l core''')
+if os.uname()[4] == 'armv6l' and os.path.isfile('/dev/vcihq'):
+    print('''Running on Raspberry Pi or compatible (BCM VideoCore)''')
 else:
-    print('''Not running on Raspberry Pi, Minecraft: Pi Edition won't work''')
+    print('''Not running on Raspberry Pi or compatible, MCPi won't work''')
+
+if os.uname()[0] == 'Linux':
+    print('''Running under GNU/Linux distribution''')
+else:
+    print('''Not running under GNU/Linux system''')
 
 while True:
     if os.path.isdir(EnvPool) == 1:
@@ -144,12 +147,8 @@ def main():
     # here launch the game
     runBinary(os.path.join(GamePool, GameVersion), LongID)
 
-    # Label(root, text=(LongID + ' (' + ShortID + ') ' + GameVersion)).pack()
-    # root.mainloop()
-
 
 if __name__ == "__main__":
     main()
 else:
-    print('intro')
-    print("debug CLI ready.")
+    print("hack me!")
