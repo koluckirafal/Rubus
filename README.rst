@@ -23,7 +23,7 @@ Use this oneliner for install latest version from git:
 
 License
 -------
-Rubus Launcher for Minecraft Pi edition
+Rubus Launcher
 
 Copyright (C) 2014-2015, Rafał 'BluRaf' Kołucki
 
