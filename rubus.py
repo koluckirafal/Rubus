@@ -119,7 +119,7 @@ def prepareGameInstance(ShortID, LongID, GameVersion,
         try:
             print('[GameEnv ] trying to unpack game package...')
             unpack(LongID, GameVersion, LocalPool, GamePool)
-        except FileNotFoundError:
+        except IOError:
             print('[GameEnv ] ... game package not found in local repository!')
             print('[GameEnv ] Downloading game package...')
             download(LongID, GameVersion, RemotePool, LocalPool)
