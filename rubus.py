@@ -19,17 +19,20 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import os, platform
+import os
+import platform
 import tarfile
 import urllib.request
 import subprocess
-
+from tkinter import *
+from tkinter import ttk
+from tkinter import messagebox
 
 ShortID = 'mcpi'
 LongID = 'minecraft-pi'
 
 GameVersion = '0.1.1'
-LauncherVersion = '0.1.0'
+LauncherVersion = '0.1.1'
 
 RemotePool = 'https://s3.amazonaws.com/assets.minecraft.net/pi/'
 RemoteFeed = 'http://pi.minecraft.net/?feed=rss2'
@@ -46,27 +49,29 @@ Intro = '''\n    Rubus Launcher, copyright (C) Rafał 'BluRaf' Kołucki, 2014-20
     press 'License' button in 'About' card for details.\n'''
 
 
-print('Rubus Launcher ' + LauncherVersion)
-print('''Minecraft: Pi Edition launcher for Raspberry Pi''')
-
-print()
-
-if platform.machine() == ('armv6l' or 'armv7l'):
-    print('''[PLATFORM] Running on ARM processor''')
-else:
-    print('''[PLATFORM] {!} Not running on ARM processor,
-           MCPi won't even try to run :v''')
-
-if os.path.isfile('/dev/vcihq'):
-    print('''[PLATFORM] BCM VideoCore messaging port available''')
-else:
-    print('''[PLATFORM] {!} BCM VideoCore messaging port not available,
+def detectPlatform():
+    if platform.machine() in ('armv6l' or 'armv7l'):
+        print('''[PLATFORM] Running on ''' + platform.machine().upper())
+        isARM = True
+    else:
+        print('''[PLATFORM] {!} Running on ''' + platform.machine() +
+              ''' processor instead of ARM processor, ''' +
+              '''MCPi won't even try to run :v''')
+        isARM = False
+    if os.path.isfile('/dev/vcihq'):
+        print('''[PLATFORM] BCM VideoCore messaging port available''')
+        isVCHIQ = True
+    else:
+        print('''[PLATFORM] {!} BCM VideoCore messaging port not available,
            MCPi won't work''')
-
-if platform.system() == 'Linux':
-    print('''[PLATFORM] Running under GNU/Linux distribution''')
-else:
-    print('''[PLATFORM] {!} Not running under GNU/Linux system''')
+        isVCHIQ = False
+    if platform.system() == 'Linux':
+        print('''[PLATFORM] Running under GNU/Linux distribution''')
+        isLinux = True
+    else:
+        print('''[PLATFORM] {!} Not running under GNU/Linux system''')
+        isLinux = False
+    return (isARM, isVCHIQ, isLinux)
 
 
 def download(LongID, GameVersion, RemotePool, LocalPool):
@@ -89,24 +94,24 @@ def unpack(LongID, GameVersion, LocalPool, GamePool):
 
 
 def prepareEnvTree(EnvPool, GamePool, LocalPool):
-        if os.path.isdir(EnvPool) == 1:
-            print('''[ENV     ] Switching to launcher environment directory...''')
-            os.chdir(EnvPool)
-        else:
-            print('''[ENV     ] Preparing launcher environment directory...''')
-            os.mkdir(EnvPool)
-        print('''[ENV     ] Checking for game directories:''')
-        if os.path.isdir(GamePool) == 1:
-            print('''[ENV     ] - unpacked game directory exists''')
-        else:
-            print('''[ENV     ] - making unpacked game directory...''')
-            os.mkdir(GamePool)
-        print('''[ENV     ] Checking for local repository:''')
-        if os.path.isdir(LocalPool) == 1:
-            print('''[ENV     ] - local repository exists''')
-        else:
-            print('''[ENV     ] - making local repository directory...''')
-            os.mkdir(LocalPool)
+    if os.path.isdir(EnvPool) == 1:
+        print('''[ENV     ] Switching to launcher environment directory...''')
+        os.chdir(EnvPool)
+    else:
+        print('''[ENV     ] Preparing launcher environment directory...''')
+        os.mkdir(EnvPool)
+    print('''[ENV     ] Checking for game directories:''')
+    if os.path.isdir(GamePool) == 1:
+        print('''[ENV     ] - unpacked game directory exists''')
+    else:
+        print('''[ENV     ] - making unpacked game directory...''')
+        os.mkdir(GamePool)
+    print('''[ENV     ] Checking for local repository:''')
+    if os.path.isdir(LocalPool) == 1:
+        print('''[ENV     ] - local repository exists''')
+    else:
+        print('''[ENV     ] - making local repository directory...''')
+        os.mkdir(LocalPool)
 
 
 def prepareGameInstance(ShortID, LongID, GameVersion,
@@ -135,24 +140,42 @@ def prepareGameInstance(ShortID, LongID, GameVersion,
 
 def runBinary(BinaryPath, BinaryName):
     print('''[ BINARY ] Trying to run game...''')
-    print( '[ BINARY ] ' +
-        subprocess.check_output(
-            ['file', os.path.join(BinaryPath, BinaryName)]
-        ).decode("UTF-8").rstrip()
-    )                                                       # Check binary type
+    print('[ BINARY ] {0}'.format(subprocess.check_output(
+        ['file', os.path.join(BinaryPath, BinaryName)]
+        ).decode("UTF-8").rstrip())
+    )  # Check binary type
     subprocess.Popen(os.path.join(BinaryPath, BinaryName))  # Run binary
+
+
+def justLaunchGame(ShortID, LongID, GameVersion,
+                   EnvPool, GamePool, LocalPool, RemotePool):
+    prepareEnvTree(EnvPool, GamePool, LocalPool)
+    prepareGameInstance(ShortID, LongID, GameVersion,
+                        GamePool, RemotePool, LocalPool)
+    runBinary(os.path.join(GamePool, GameVersion), LongID)
 
 
 def main():
     print(Intro)
-    prepareEnvTree(EnvPool, GamePool, LocalPool)
-    print()
-    prepareGameInstance(ShortID, LongID,
-                        GameVersion, GamePool,
-                        RemotePool, LocalPool)
-    print()
-    runBinary(os.path.join(GamePool, GameVersion), LongID)
+    if False in detectPlatform():
+        if messagebox.showerror(title="Initialization error!",
+                                message='Incompatible platform, ' +
+                                        'MCPi won\'t work properly.'):
+            sys.exit("[EXIT    ] Incompatible platform.")
 
+    root = Tk()
+    root.title("Rubus Launcher")
+    infolabel = ttk.Label(root, text=('Rubus Launcher ' + LauncherVersion))
+    launchbutton = ttk.Button(root, text=('Launch version ' + GameVersion),
+                              command=lambda: justLaunchGame(ShortID, LongID,
+                                                             GameVersion,
+                                                             EnvPool, GamePool,
+                                                             LocalPool,
+                                                             RemotePool))
+    infolabel.grid(row=0, column=1)
+    launchbutton.grid(row=1, column=1)
+    root.mainloop()
+    sys.exit("[EXIT    ] Exited.")
 
 if __name__ == "__main__":
     main()
