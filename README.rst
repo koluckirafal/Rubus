@@ -11,21 +11,15 @@ Requirements
 
 How to run launcher?
 --------------------
-Use this oneliner for install latest version from git:
-
-* :code:`curl http://bluraf.eu/0install/rubus | bash`
-
-... or download manually:
-
-* Download :code:`Rubus.py` somewhere (in ~ or /opt/)
-* :code:`chmod +x ./rubus.py`
-* :code:`./rubus.py` or :code:`python3 ./rubus.py`
+1. Download latest :code:`rubus.py` from https://github.com/BluRaf/Rubus/releases
+2. :code:`chmod +x ./rubus.py`
+3. :code:`./rubus.py` or :code:`python3 ./rubus.py`
 
 License
 -------
 Rubus Launcher
 
-Copyright (C) 2014-2015, Rafał 'BluRaf' Kołucki
+Copyright (C) 2014-2016, Rafał 'BluRaf' Kołucki
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

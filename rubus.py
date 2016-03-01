@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Rubus Launcher
@@ -24,6 +23,7 @@ import platform
 import tarfile
 import urllib.request
 import subprocess
+from collections import OrderedDict
 from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
@@ -31,7 +31,11 @@ from tkinter import messagebox
 ShortID = 'mcpi'
 LongID = 'minecraft-pi'
 
-GameVersion = '0.1.1'
+versions = OrderedDict({'0.1.0': {'pkg_checksum': '',
+                                  'exec_checksum': ''},
+                        '0.1.1': {'pkg_checksum': 'e0d68918874cdd403de1fd399380ae2930913fcefdbf60a3fbfebb62e2cfacab',
+                                  'exec_checksum': '45280c16930d3c787412a8c6239df77d8b34ad6d2698e01d73f94d914080f085'}})
+
 LauncherVersion = '0.1.1'
 
 RemotePool = 'https://s3.amazonaws.com/assets.minecraft.net/pi/'
@@ -41,7 +45,7 @@ EnvPool = os.path.join(os.path.expanduser('~'), '.' + ShortID)
 LocalPool = os.path.join(EnvPool, 'packages')
 GamePool = os.path.join(EnvPool, 'versions')
 
-Intro = '''\n    Rubus Launcher, copyright (C) Rafał 'BluRaf' Kołucki, 2014-2015\n\
+Intro = '''\n    Rubus Launcher, copyright (C) Rafał 'BluRaf' Kołucki, 2014-2016\n\
     This program comes with ABSOLUTELY NO WARRANTY;
     for details press 'License' button in 'About' card.\n\
     This is free software, and you are welcome to redistribute it\n\
@@ -49,7 +53,14 @@ Intro = '''\n    Rubus Launcher, copyright (C) Rafał 'BluRaf' Kołucki, 2014-20
     press 'License' button in 'About' card for details.\n'''
 
 
-def detectPlatform():
+def current_user():
+    if pwd:
+        return pwd.getpwuid(os.geteuid()).pw_name
+    else:
+        return getpass.getuser()
+
+
+def detect_platform():
     if platform.machine() in ('armv6l' or 'armv7l'):
         print('''[PLATFORM] Running on ''' + platform.machine().upper())
         isARM = True
@@ -74,8 +85,41 @@ def detectPlatform():
     return (isARM, isVCHIQ, isLinux)
 
 
+class Game:
+    def __init__(self, long_id, short_id, version, package_checksum, main_exec_checksum):
+        self.version = version
+        self.short_id = short_id
+        self.long_id = long_id
+        self.package_checksum = package_checksum
+        self.main_exec_checksum = main_exec_checksum
+
+    def print_info(self):
+        print(self.long_id + " (" + self.short_id + ") " + self.version)
+
+
+class Instance:
+    def __init__(self, base_game, texture_pack):
+        self.base_game = base_game
+        self.texture_pack = texture_pack
+
+
+class StatusBar(Frame):
+    def __init__(self, master):
+        Frame.__init__(self, master)
+        self.label = Label(self, bd=1, relief=SUNKEN, anchor=W)
+        self.label.pack(fill=X)
+
+    def set(self, format, *args):
+        self.label.config(text=format % args)
+        self.label.update_idletasks()
+
+    def clear(self):
+        self.label.config(text="")
+        self.label.update_idletasks()
+
+
 def download(LongID, GameVersion, RemotePool, LocalPool):
-    '''Downloads game package'''
+    """Downloads game package"""
     RemotePackage = urllib.request.urlopen('%s%s-%s.tar.gz'
                                            % (RemotePool, LongID, GameVersion))
     LocalPackage = open(os.path.join(LocalPool, '%s-%s.tar.gz'
@@ -85,7 +129,7 @@ def download(LongID, GameVersion, RemotePool, LocalPool):
 
 
 def unpack(LongID, GameVersion, LocalPool, GamePool):
-    '''Unpacks game package'''
+    """Unpacks game package"""
     LocalPackage = tarfile.open(os.path.join(LocalPool,
                                              '%s-%s.tar.gz'
                                              % (LongID, GameVersion)), "r:gz")
@@ -93,7 +137,7 @@ def unpack(LongID, GameVersion, LocalPool, GamePool):
     LocalPackage.close()
 
 
-def prepareEnvTree(EnvPool, GamePool, LocalPool):
+def prepare_envtree(EnvPool, GamePool, LocalPool):
     if os.path.isdir(EnvPool) == 1:
         print('''[ENV     ] Switching to launcher environment directory...''')
         os.chdir(EnvPool)
@@ -114,8 +158,8 @@ def prepareEnvTree(EnvPool, GamePool, LocalPool):
         os.mkdir(LocalPool)
 
 
-def prepareGameInstance(ShortID, LongID, GameVersion,
-                        GamePool, RemotePool, LocalPool):
+def prepare_gameinstance(ShortID, LongID, GameVersion,
+                         GamePool, RemotePool, LocalPool):
     if os.path.isdir(os.path.join(GamePool, GameVersion)) == 1:
         print('[GameEnv ] Switching to unpacked game directory...')
         os.chdir(os.path.join(GamePool, GameVersion))
@@ -134,48 +178,88 @@ def prepareGameInstance(ShortID, LongID, GameVersion,
         print('[GameEnv ] Renaming version directory...')
         os.rename(os.path.join(GamePool, ShortID),
                   os.path.join(GamePool, GameVersion))
-        prepareGameInstance(ShortID, LongID, GameVersion,
-                            GamePool, RemotePool, LocalPool)
+        prepare_gameinstance(ShortID, LongID, GameVersion,
+                             GamePool, RemotePool, LocalPool)
 
 
-def runBinary(BinaryPath, BinaryName):
+def run_binary(BinaryPath, BinaryName):
     print('''[ BINARY ] Trying to run game...''')
     print('[ BINARY ] {0}'.format(subprocess.check_output(
         ['file', os.path.join(BinaryPath, BinaryName)]
-        ).decode("UTF-8").rstrip())
-    )  # Check binary type
+    ).decode("UTF-8").rstrip())
+          )  # Check binary type
     subprocess.Popen(os.path.join(BinaryPath, BinaryName))  # Run binary
 
 
-def justLaunchGame(ShortID, LongID, GameVersion,
-                   EnvPool, GamePool, LocalPool, RemotePool):
-    prepareEnvTree(EnvPool, GamePool, LocalPool)
-    prepareGameInstance(ShortID, LongID, GameVersion,
-                        GamePool, RemotePool, LocalPool)
-    runBinary(os.path.join(GamePool, GameVersion), LongID)
+def just_launch_game(ShortID, LongID, GameVersion,
+                     EnvPool, GamePool, LocalPool, RemotePool):
+    prepare_envtree(EnvPool, GamePool, LocalPool)
+    prepare_gameinstance(ShortID, LongID, GameVersion,
+                         GamePool, RemotePool, LocalPool)
+    try:
+        run_binary(os.path.join(GamePool, GameVersion), LongID)
+    except OSError as err:
+        print("[ BINARY ] OS Error: {0}".format(err))
+        messagebox.showerror(title="Executable file error",
+                             message='Executable file format error.\n' +
+                                     'Are you trying to run ' +
+                                     'Minecraft: Pi Edition ' +
+                                     'on processor other than ARM?')
+        errorlevel = 1
+
+
+def init_game(gver):
+    return Game('minecraft-pi', 'mcpi', gver,
+                versions[gver]['pkg_checksum'], versions[gver]['exec_checksum'])
+
+
+def switch_game(game, version_number):
+    game = init_game(list(versions)[version_number])
 
 
 def main():
     print(Intro)
-    if False in detectPlatform():
-        if messagebox.showerror(title="Initialization error!",
-                                message='Incompatible platform, ' +
-                                        'MCPi won\'t work properly.'):
-            sys.exit("[EXIT    ] Incompatible platform.")
+
+    if args.platform_checks:
+        if False in detect_platform():
+            if messagebox.showerror(title="Initialization error!",
+                                    message='Incompatible platform, ' +
+                                            'MCPi won\'t work properly. ' +
+                                            'For details check stdout.'):
+                sys.exit("[EXIT    ] Incompatible platform.")
 
     root = Tk()
     root.title("Rubus Launcher")
+    root.resizable(False, False)
+
+    selected_version_in_gui = len(versions)-1
+    selected_version = list(versions)[selected_version_in_gui]
+
+    instance_selector = ttk.Combobox(root, textvariable=selected_version)
+    instance_selector['state'] = 'readonly'
+    instance_selector['values'] = list(versions)
+    instance_selector.current(selected_version_in_gui)
+
+
+    game = init_game(instance_selector.get())
+    game.print_info()
+
     infolabel = ttk.Label(root, text=('Rubus Launcher ' + LauncherVersion))
-    launchbutton = ttk.Button(root, text=('Launch version ' + GameVersion),
-                              command=lambda: justLaunchGame(ShortID, LongID,
-                                                             GameVersion,
-                                                             EnvPool, GamePool,
-                                                             LocalPool,
-                                                             RemotePool))
-    infolabel.grid(row=0, column=1)
+    launchbutton = ttk.Button(root, text=('Launch'),
+                              command=lambda: just_launch_game(game.short_id, game.long_id,
+                                                               game.version, EnvPool, GamePool,
+                                                               LocalPool, RemotePool))
+    status = StatusBar(root)
+    status.set("Hello, " + current_user() + "! " + "Ready to play Minecraft: Pi Edition " + game.version)
+    instance_selector.bind('<<ComboboxSelected>>', switch_game(game, selected_version_in_gui))
+
+    status.grid(row=2, column=0, columnspan=2)
+    infolabel.grid(row=0, column=0, columnspan=2)
+    instance_selector.grid(row=1, column=0)
     launchbutton.grid(row=1, column=1)
     root.mainloop()
-    sys.exit("[EXIT    ] Exited.")
+    sys.exit()
+
 
 if __name__ == "__main__":
     main()
