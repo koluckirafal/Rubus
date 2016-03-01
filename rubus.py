@@ -24,7 +24,6 @@ import tarfile
 import urllib.request
 import subprocess
 import argparse
-from collections import OrderedDict
 from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
@@ -39,10 +38,15 @@ except ImportError:
 ShortID = 'mcpi'
 LongID = 'minecraft-pi'
 
-versions = OrderedDict({'0.1.0': {'pkg_checksum': '',
-                                  'exec_checksum': ''},
-                        '0.1.1': {'pkg_checksum': 'e0d68918874cdd403de1fd399380ae2930913fcefdbf60a3fbfebb62e2cfacab',
-                                  'exec_checksum': '45280c16930d3c787412a8c6239df77d8b34ad6d2698e01d73f94d914080f085'}})
+versions = {'0.1.0': {'pkg_checksum': '',
+                      'exec_checksum': ''},
+            '0.1.1': {'pkg_checksum': 'e0d68918874cdd403de1fd399380ae2930913fcefdbf60a3fbfebb62e2cfacab',
+                      'exec_checksum': '45280c16930d3c787412a8c6239df77d8b34ad6d2698e01d73f94d914080f085'}}
+version_list = list(versions)
+version_list.sort(key=lambda x: [int(y) for y in x.split('.')])
+reversed_version_list = version_list
+reversed_version_list.reverse()
+
 
 LauncherVersion = '0.1.1'
 
@@ -59,7 +63,6 @@ Intro = '''\n    Rubus Launcher, copyright (C) Rafał 'BluRaf' Kołucki, 2014-20
     This is free software, and you are welcome to redistribute it\n\
     under certain conditions;
     press 'License' button in 'About' card for details.\n'''
-
 
 parser = argparse.ArgumentParser(description='Manages Minecraft: Pi Edition instances.')
 parser.add_argument('--skip-checks', action='store_false', dest='platform_checks',
@@ -221,13 +224,23 @@ def just_launch_game(ShortID, LongID, GameVersion,
         errorlevel = 1
 
 
-def init_game(gver):
-    return Game('minecraft-pi', 'mcpi', gver,
-                versions[gver]['pkg_checksum'], versions[gver]['exec_checksum'])
+selected_version_in_gui = 0  # Version position on list,
+# defaults to latest version
+selected_version = version_list[selected_version_in_gui]  # Version string
 
 
-def switch_game(game, version_number):
-    game = init_game(list(versions)[version_number])
+def init_game(version):
+    return Game('minecraft-pi', 'mcpi', version,
+                versions[version]['pkg_checksum'], versions[version]['exec_checksum'])
+
+
+def switch_game(version_number):
+    return init_game(list(version_list)[version_number])
+
+
+def select_latest_version():
+    global game
+    game = init_game(list(version_list)[selected_version_in_gui])
 
 
 def main():
@@ -247,17 +260,12 @@ def main():
     root.title("Rubus Launcher")
     root.resizable(False, False)
 
-    selected_version_in_gui = len(versions)-1
-    selected_version = list(versions)[selected_version_in_gui]
-
     instance_selector = ttk.Combobox(root, textvariable=selected_version)
     instance_selector['state'] = 'readonly'
-    instance_selector['values'] = list(versions)
+    instance_selector['values'] = version_list
     instance_selector.current(selected_version_in_gui)
 
-
-    game = init_game(instance_selector.get())
-    game.print_info()
+    select_latest_version()
 
     infolabel = ttk.Label(root, text=('Rubus Launcher ' + LauncherVersion))
     launchbutton = ttk.Button(root, text=('Launch'),
@@ -266,12 +274,13 @@ def main():
                                                                LocalPool, RemotePool))
     status = StatusBar(root)
     status.set("Hello, " + current_user() + "! " + "Ready to play Minecraft: Pi Edition " + game.version)
-    instance_selector.bind('<<ComboboxSelected>>', switch_game(game, selected_version_in_gui))
+    instance_selector.bind('<<ComboboxSelected>>', switch_game(selected_version_in_gui))
 
     status.grid(row=2, column=0, columnspan=2)
     infolabel.grid(row=0, column=0, columnspan=2)
     instance_selector.grid(row=1, column=0)
     launchbutton.grid(row=1, column=1)
+    game.print_info()
     root.mainloop()
     sys.exit()
 
