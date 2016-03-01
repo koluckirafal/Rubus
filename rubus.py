@@ -23,10 +23,18 @@ import platform
 import tarfile
 import urllib.request
 import subprocess
+import argparse
 from collections import OrderedDict
 from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
+
+try:
+    import pwd
+except ImportError:
+    import getpass
+
+    pwd = None
 
 ShortID = 'mcpi'
 LongID = 'minecraft-pi'
@@ -51,6 +59,11 @@ Intro = '''\n    Rubus Launcher, copyright (C) Rafał 'BluRaf' Kołucki, 2014-20
     This is free software, and you are welcome to redistribute it\n\
     under certain conditions;
     press 'License' button in 'About' card for details.\n'''
+
+
+parser = argparse.ArgumentParser(description='Manages Minecraft: Pi Edition instances.')
+parser.add_argument('--skip-checks', action='store_false', dest='platform_checks',
+                    help='Disables platform compatibility checks.')
 
 
 def current_user():
@@ -218,7 +231,9 @@ def switch_game(game, version_number):
 
 
 def main():
+    args = parser.parse_args()
     print(Intro)
+    print("Hello, " + current_user())
 
     if args.platform_checks:
         if False in detect_platform():
